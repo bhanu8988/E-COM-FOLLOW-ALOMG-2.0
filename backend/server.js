@@ -1,35 +1,35 @@
-const app = require("./app");
+const express = require("express");
+const dotenv = require("dotenv");
+const cors = require("cors");
 
-// Handling uncaught Exception
-process.on("uncaughtException", (err) => {
-    console.log(`Error: ${err.message}`);
-    console.log("Shutting down the server due to an uncaught exception");
+// Load .env BEFORE using process.env
+dotenv.config({ path: "./config/.env" });
+
+// Initialize app FIRST before using it
+const app = express();
+
+// Use CORS middleware AFTER initializing app
+app.use(cors());
+
+// Import database connection
+const connectDatabase = require("./db/Database");
+
+// Debugging
+console.log("Loaded MONGO_URI:", process.env.MONGO_URI); // Should print MongoDB URI
+
+// Connect to database AFTER loading .env
+connectDatabase();
+
+// Add a basic route    
+app.get("/", (req, res) => {    
+    res.send("Server is running!");
 });
 
-// Load environment variables
-if (process.env.NODE_ENV !== "PRODUCTION") {
-    require("dotenv").config({ path: "config/.env" });
-}
 
-// Set a default port if process.env.PORT is undefined
+// Define PORT
 const PORT = process.env.PORT || 8000;
 
-// Default route to prevent "Cannot GET /" error
-app.get("/", (req, res) => {
-    res.send("Server is running...");
-});
-
-// Create server
-const server = app.listen(PORT, () => {
+// Start the server
+app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
-});
-
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (err) => {
-    console.log(`Error: ${err.message}`);
-    console.log("Shutting down the server due to an unhandled promise rejection");
-
-    server.close(() => {
-        process.exit(1);
-    });
 });
